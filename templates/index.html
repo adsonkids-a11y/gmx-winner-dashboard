@@ -1,252 +1,228 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>GMX Winner Dashboard (MVP)</title>
-    <p style="margin-top: 4px; color: #9ca3af; font-size: 0.9rem;">
-  最終更新: {{ updated_at.strftime('%Y-%m-%d %H:%M:%S') }}
-</p>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            margin: 0;
-            padding: 0;
             background: #0f172a;
             color: #e5e7eb;
-        }
-        header {
-            padding: 16px 24px;
-            background: #020617;
-            border-bottom: 1px solid #1f2937;
-        }
-        header h1 {
             margin: 0;
-            font-size: 20px;
+            padding: 0;
         }
-        header p {
-            margin: 4px 0 0;
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 16px 40px;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        h2 {
+            font-size: 20px;
+            margin-top: 32px;
+            margin-bottom: 8px;
+            border-left: 4px solid #38bdf8;
+            padding-left: 8px;
+        }
+        .hero {
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: radial-gradient(circle at top left,#22c55e33,#0f172a 55%);
+            border: 1px solid #1f2937;
+        }
+        .hero-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .hero-sub {
+            font-size: 14px;
+            color: #e5e7eb;
+            margin-bottom: 4px;
+        }
+        .hero-note {
             font-size: 12px;
             color: #9ca3af;
         }
-        main {
-            padding: 24px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        h2 {
-            font-size: 18px;
-            margin-top: 0;
-            margin-bottom: 12px;
-        }
-        section {
-            background: #020617;
-            border-radius: 8px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            border: 1px solid #1f2937;
+        .section-desc {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 6px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 13px;
+            margin-top: 8px;
         }
         th, td {
+            border: 1px solid #1f2937;
             padding: 6px 8px;
-            text-align: left;
         }
         th {
             background: #111827;
-            border-bottom: 1px solid #1f2937;
+            text-align: left;
         }
         tr:nth-child(even) td {
             background: #020617;
         }
         tr:nth-child(odd) td {
-            background: #030712;
+            background: #020617ee;
         }
-        .tag {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 9999px;
-            font-size: 10px;
-            background: #1f2937;
-        }
-        .tag-long {
-            color: #22c55e;
-        }
-        .tag-short {
-            color: #f97316;
-        }
-        .muted {
-            color: #9ca3af;
-            font-size: 11px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 2fr 1.5fr;
-            gap: 16px;
-        }
-        @media (max-width: 900px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
         }
         .pill {
             display: inline-block;
-            padding: 2px 8px;
-            border-radius: 9999px;
             font-size: 11px;
-            background: #111827;
+            padding: 2px 6px;
+            border-radius: 999px;
+            border: 1px solid #4b5563;
+            color: #e5e7eb;
+            margin-left: 4px;
         }
-        .winner-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 8px;
-            flex-wrap: wrap;
+        .footer {
+            margin-top: 40px;
+            font-size: 11px;
+            color: #6b7280;
+            border-top: 1px solid #1f2937;
+            padding-top: 12px;
         }
     </style>
 </head>
 <body>
-<header>
-    <h1>GMX Winner Dashboard (MVP)</h1>
-    <p>GMX v2 (Arbitrum) 上位トレーダーの PnL / オープンポジションをざっくり可視化</p>
-</header>
+<div class="page">
 
-<main>
-    <!-- ランキング & Winner -->
-    <div class="grid">
-        <!-- ランキング -->
-        <section>
-            <h2>上位アカウントランキング（realized PnL順）</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Wallet</th>
-                    <th>realized PnL</th>
-                    <th>net capital</th>
-                    <th>w / l</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for acc in accounts %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>
-                            <span class="muted">
-                                {{ acc.id[:6] }}...{{ acc.id[-4:] }}
-                            </span>
-                        </td>
-                        <td>
-                            {{ format_usd(to_decimal(acc.realizedPnl, 30)) }} USD
-                        </td>
-                        <td>
-                            {{ format_usd(to_decimal(acc.netCapital, 30)) }} USD
-                        </td>
-                        <td>
-                            {{ acc.wins }} / {{ acc.losses }}
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            <p class="muted" style="margin-top:8px;">
-                * GMX Subsquid のデータをそのまま整形して表示しています（単位: USD）。
-            </p>
-        </section>
-
-        <!-- Winner の詳細 -->
-        <section>
-            <div class="winner-header">
-                <h2>今ポジションを持っている「勝者」</h2>
-                {% if winner %}
-                    <span class="pill">Rank #{{ winner.rank }}</span>
-                {% endif %}
-            </div>
-
-            {% if winner %}
-                <p class="muted">
-                    Wallet: {{ winner.account.id[:10] }}...{{ winner.account.id[-6:] }}<br>
-                    Total realized PnL:
-                    {{ format_usd(to_decimal(winner.account.realizedPnl, 30)) }} USD<br>
-                    Net capital:
-                    {{ format_usd(to_decimal(winner.account.netCapital, 30)) }} USD<br>
-                    Wins/Losses: {{ winner.account.wins }} / {{ winner.account.losses }}
-                </p>
-
-                {% if winner_positions %}
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>Market</th>
-                            <th>Dir</th>
-                            <th>Size (USD)</th>
-                            <th>Entry</th>
-                            <th>Realized</th>
-                            <th>Unrealized</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for pos in winner_positions %}
-                            <tr>
-                                <td>{{ guess_market_label(pos.market) }}</td>
-                                <td>
-                                    {% if pos.isLong %}
-                                        <span class="tag tag-long">LONG</span>
-                                    {% else %}
-                                        <span class="tag tag-short">SHORT</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ format_usd(to_decimal(pos.sizeInUsd, 30)) }}</td>
-                                <td>{{ "%.4f"|format(to_decimal(pos.entryPrice, 27)) }}</td>
-                                <td>{{ format_usd(to_decimal(pos.realizedPnl, 30)) }}</td>
-                                <td>{{ format_usd(to_decimal(pos.unrealizedPnl, 30)) }}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <p>現在、このアカウントにはオープンポジションがありません。</p>
-                {% endif %}
-            {% else %}
-                <p>現在ポジションを持っている上位アカウントは見つかりませんでした。</p>
-            {% endif %}
-        </section>
+    <!-- ヒーロー部分（タイトル＋説明） -->
+    <div class="hero">
+        <div class="hero-title">GMX Winner Dashboard <span class="pill">MVP</span></div>
+        <div class="hero-sub">
+            GMX v2（Arbitrum）の「確定利益が大きいトレーダー」と「そのオープンポジション」をざっくり可視化するための、
+            超シンプルなダッシュボードです。
+        </div>
+        <div class="hero-note">
+            ※ GMX Subsquid の公開データを元に自動集計しています。<br />
+            ※ 投資助言ではありません。データの正確性は保証されません。利用は自己責任でお願いします。
+        </div>
     </div>
 
-    <!-- 全体集計 -->
-    <section>
-        <h2>上位トレーダー全体のオープンポジション集計</h2>
+    <!-- ① トレーダーランキング -->
+    <h2>① トレーダーランキング（確定利益 Top {{ accounts|length }}）</h2>
+    <p class="section-desc">
+        realizedPnl（確定損益）の大きい順に、上位トレーダーを表示しています。
+    </p>
 
-        {% if summary %}
-            <table>
-                <thead>
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Account</th>
+            <th>realized PnL (USD)</th>
+            <th>wins / losses</th>
+            <th>net capital (USD)</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for acc in accounts %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><code>{{ acc.id }}</code></td>
+                <td>{{ format_usd(to_decimal(acc.realizedPnl, 30)) }}</td>
+                <td>{{ acc.wins }} / {{ acc.losses }}</td>
+                <td>{{ format_usd(to_decimal(acc.netCapital, 30)) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- ② 現在ポジションを持つ勝者 -->
+    <h2>② 現在ポジションを持つ「勝者」サンプル</h2>
+    <p class="section-desc">
+        ランキング上位から順に、現在オープンポジションを持っているアカウントを 1 名だけピックアップしています。
+    </p>
+
+    {% if winner %}
+        <p>
+            Rank #{{ winner.rank }} /
+            <strong>Wallet:</strong> <code>{{ winner.account.id }}</code><br />
+            Total realized PnL: <strong>{{ format_usd(to_decimal(winner.account.realizedPnl, 30)) }} USD</strong><br />
+            Wins / Losses: {{ winner.account.wins }} / {{ winner.account.losses }}<br />
+            Net capital: {{ format_usd(to_decimal(winner.account.netCapital, 30)) }} USD
+        </p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Market</th>
+                <th>Direction</th>
+                <th>Size (USD)</th>
+                <th>Entry Price</th>
+                <th>realized PnL</th>
+                <th>unrealized PnL</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for pos in winner_positions %}
                 <tr>
-                    <th>Market</th>
-                    <th>LONG Size (USD)</th>
-                    <th>SHORT Size (USD)</th>
-                    <th>LONG Cnt</th>
-                    <th>SHORT Cnt</th>
+                    <td>{{ guess_market_label(pos.market) }}</td>
+                    <td>{{ "LONG" if pos.isLong else "SHORT" }}</td>
+                    <td>{{ format_usd(to_decimal(pos.sizeInUsd, 30)) }}</td>
+                    <td>{{ "%.4f"|format(to_decimal(pos.entryPrice, 27)) }}</td>
+                    <td>{{ format_usd(to_decimal(pos.realizedPnl, 30)) }}</td>
+                    <td>{{ format_usd(to_decimal(pos.unrealizedPnl, 30)) }}</td>
                 </tr>
-                </thead>
-                <tbody>
-                {% for market_id, info in summary.items() %}
-                    <tr>
-                        <td>{{ info.label }}</td>
-                        <td>{{ format_usd(info.long_size) }}</td>
-                        <td>{{ format_usd(info.short_size) }}</td>
-                        <td>{{ info.long_count }}</td>
-                        <td>{{ info.short_count }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>オープンポジションを持つアカウントがありませんでした。</p>
-        {% endif %}
-    </section>
-</main>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>現在ポジションを持つ上位アカウントは見つかりませんでした。</p>
+    {% endif %}
+
+    <!-- ③ 上位トレーダー全体のポジション集計 -->
+    <h2>③ 上位トレーダー全体のポジション集計</h2>
+    <p class="section-desc">
+        ランキング上位アカウントのオープンポジションを、market ごとに
+        「LONG / SHORT の合計サイズ」と「ポジション数」で集計したものです。
+    </p>
+
+    {% if summary %}
+        <table>
+            <thead>
+            <tr>
+                <th>Market</th>
+                <th>LONG Size (USD)</th>
+                <th>LONG Count</th>
+                <th>SHORT Size (USD)</th>
+                <th>SHORT Count</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for market_id, info in summary.items() %}
+                <tr>
+                    <td>{{ info.label }}</td>
+                    <td>{{ format_usd(info.long_size) }}</td>
+                    <td>{{ info.long_count }}</td>
+                    <td>{{ format_usd(info.short_size) }}</td>
+                    <td>{{ info.short_count }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>オープンポジションを持つアカウントがありませんでした。</p>
+    {% endif %}
+
+    <div class="footer">
+        GMX Winner Dashboard (MVP) – Data source: GMX v2 (Arbitrum) / Subsquid GraphQL<br />
+        このページは個人開発の検証用ツールです。投資判断には必ずご自身のリサーチを行ってください。
+    </div>
+
+</div>
 </body>
 </html>
