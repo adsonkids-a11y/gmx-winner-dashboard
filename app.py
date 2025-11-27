@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from datetime import datetime, timezone
+
 
 from services import (
     fetch_top_accounts,
@@ -34,6 +36,7 @@ async def dashboard(request: Request):
 
     # 3. 全体のポジション集計
     summary = aggregate_positions_for_accounts(accounts)
+    updated_at = datetime.now(timezone.utc).astimezone()
 
     # 4. HTML に渡す
     return templates.TemplateResponse(
@@ -47,5 +50,6 @@ async def dashboard(request: Request):
             "to_decimal": to_decimal,
             "format_usd": format_usd,
             "guess_market_label": guess_market_label,
+            "updated_at": updated_at,
         },
     )
